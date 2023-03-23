@@ -8,42 +8,40 @@ class Player:
         self.draws = 0
         self.mark = str()
         self.moves = []
-        self.firstGame = True
         self.winner = False
 
-    def loadPlayer(self, player_name, player_data):
+    def reset(self):
+        self.moves = []
+        self.mark = str()
+        self.winner = False
+
+    def load_player(self, player_name, player_data):
         self.name = player_name
         self.wins = player_data[0]
         self.losses = player_data[1]
         self.draws = player_data[2]
         if self.wins + self.losses + self.draws != 0:
             print(self.strings["_RETURNING_STR"].format(self.name))
-            self.firstGame = False
 
-    def loadMoves(self, moves):
+    def load_moves(self, moves):
         self.moves = moves
 
-    def printMoves(self):
+    def print_moves(self):
         if self.moves is not None:
             print(self.strings["_MOVES_STR"].format(self.name), end='')
             for move in self.moves:
                 if move != self.moves[-1]:
                     print(self.strings["_MOVES_LIST_STR"].format(move), end='')
                 else:
-                    print(move, end='')
+                    print(move, end='\n')
             print()
 
-    def loadCurrentPlayer(self, player_data):
-        self.current_player = player_data[4]
-
-    def newPlayer(self, player_name):
+    def new_player(self, player_name):
         print(self.strings["_FIRST_TIME_STR"])
-        self.firstGame = True
-        self.name = player_name
         player_data = [0, 0, 0]
-        self.loadPlayer(player_name, player_data)
+        self.load_player(player_name, player_data)
 
-    def makeCPU(self):
+    def make_CPU(self):
         self.name = self.strings["_COMPUTER_NAME"]
 
     def __str__(self):

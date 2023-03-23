@@ -10,6 +10,5 @@ print(strings["_WELCOME_STR"])
 game = Game(strings)
 while not game.quit:
     game.play()
-game.reset()
-game.saveGame()
+game.save_game()
 print(strings["_GOODBYE_STR"])

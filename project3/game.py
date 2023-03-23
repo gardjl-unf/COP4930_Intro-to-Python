@@ -1,10 +1,13 @@
 from random import randint
 from json import load, dump
+from os.path import getsize
 from player import Player
 from board import Board
 
 _MARK_INVERT = { "O" :"X", "X" : "O"}
-_MOVE_STRINGS = ["1st","2nd","3rd","4th","5th","6th","7th","8th","9th"]
+_MOVE_STRINGS = [ "1st", "2nd", "3rd", "4th", "5th" ]
+_MARKS = [ "X", "O" ]
+_HEADS_OR_TAILS = [ "H", "T" ]
 
 class Game:
     def __init__(self, strings):
@@ -13,74 +16,98 @@ class Game:
         self.computer = Player(self.strings)
         self.board = Board(self.strings)
         self.current_player = str()
-        self.computer.makeCPU()
         self.file = self.strings["_FILE_PATH"] + self.strings["_FILE_NAME"]
+        self.msg = str()
         self.loaded = False
         self.quit = False
+        self.computer.make_CPU()
 
     def reset(self):
-        self.player = Player(self.strings)
-        self.computer = Player(self.strings)
-        self.board = Board(self.strings)
-        self.current_player = str()
-        self.computer.makeCPU()
-        self.loaded = False
-        self.quit = False
+        self.player.reset()
+        self.computer.reset()
+        self.board.reset()
 
-    def loadGame(self, player_name):
-        with open(self.file) as file_object:
-            print(self.strings["_LOADING_STR"])
-            game_data = load(file_object)
-            if player_name not in game_data:
-                self.player = self.player.newPlayer(player_name)
-            else:
-                player_data = game_data[player_name]
-                self.strings["_RETURNING_STR"].format(player_name)
-                self.loadGameState(player_name, player_data)
-                self.loaded = True
-                print(self.player)
+    def load_game(self, player_name):
+        print(self.strings["_LOADING_STR"])
+        if getsize(self.file) > 0:
+            with open(self.file) as file_object:
+                game_data = load(file_object)
+                if player_name not in game_data:
+                    self.player.new_player(player_name)
+                else:
+                    player_data = game_data[player_name]
+                    self.player.load_player(player_name, player_data)
+                    self.current_player = self.player.name
+                    print(self.player)
+                    self.strings["_RETURNING_STR"].format(player_name)
+                    self.load_game_state(player_name, player_data)
+                    self.loaded = True       
+        else:
+            self.player.new_player(player_name)
 
-    def loadGameState(self, player_name, player_data):
-        self.player.loadPlayer(player_name, player_data)
-        self.loadMark(player_data[3])
-        self.loadCurrentPlayer(player_data[4])
-        self.player.loadMoves(player_data[5])
+    def load_game_state(self, player_name, player_data):
+        self.player.load_moves(player_data[4])
         if len(self.player.moves) > 0:
             self.board.updateBoard(self.player)
-            self.player.printMoves()
-        self.computer.loadMoves(player_data[6])
+            self.player.print_moves()
+        self.computer.load_moves(player_data[5])
         if len(self.computer.moves) > 0:
             self.board.updateBoard(self.computer)
-            self.computer.printMoves()
+            self.computer.print_moves()
+        if len(self.player.moves) + len(self.computer.moves) == 0:
+            self.get_mark()
+            self.coin_flip()
+        else:
+            self.load_mark(player_data[3])
 
-    def loadCurrentPlayer(self, current_data):
-        self.current_player = current_data
+    def binary_entry(self, prompt, valid_entries):
+        entry = input(prompt)
+        while entry not in valid_entries:
+            print(self.strings["_INVALID_ENTRY_STR"].format(valid_entries[0], valid_entries[1]))
+            entry = input(prompt)
+        return entry
 
-    def loadMark(self, mark_data):
-        self.player.mark = mark_data
-        self.computer.mark = _MARK_INVERT[self.player.mark]
+    def get_mark(self):
+        self.set_mark(self.binary_entry(self.strings["_CHOOSE_MARK_STR"], _MARKS))
+        print()
+
+    def get_name(self):
+        self.player.player_name = input(self.strings["_NAME_PROMPT_STR"])
+
+    def load_mark(self, mark_data):
+        self.set_mark(mark_data)
         print(self.strings["_CURRENT_MARK_STR"].format(self.player.name, self.player.mark))
 
-    def saveGame(self):
-        with open(self.file) as file_object:
-            game_data = load(file_object)
+    def set_mark(self, mark):
+        self.player.mark = mark
+        self.computer.mark = _MARK_INVERT[self.player.mark]
+
+    def save_game(self):
+        if getsize(self.file) > 0:
+            with open(self.file) as file_object:
+                game_data = load(file_object)
+        else:
+            game_data = dict()
+        if self.board.moves == 9 or self.player.winner or self.computer.winner:
+            print(self.player)
+            self.reset()
+        else:
+            print(self.strings["_SAVE_STR"])
         game_data[self.player.name] = [self.player.wins, self.player.losses, self.player.draws, self.player.mark, \
-                                       self.current_player, self.player.moves, self.computer.moves, self.board.board]
+                                       self.player.moves, self.computer.moves]
         with open(self.file, 'w') as file_object:
             dump(game_data, file_object, indent = 3)
-        print(self.strings["_SAVE_STR"])
 
     def play(self):
-        self.player.player_name = input(self.strings["_NAME_PROMPT_STR"])
-        self.loadGame(self.player.player_name)
+        self.get_name()
+        self.load_game(self.player.player_name)
         if not self.loaded:   
-            self.player.mark = input(self.strings["_CHOOSE_MARK_STR"])
-            self.computer.mark = _MARK_INVERT[self.player.mark]
-            self.coinFlip()
-        self.playRounds()
+            self.get_mark()
+            self.coin_flip()
+        self.play_rounds()
 
-    def coinFlip(self):
-        input(self.strings["_COIN_TOSS_STR"])
+    def coin_flip(self):
+        self.binary_entry(self.strings["_COIN_TOSS_STR"], _HEADS_OR_TAILS)
         coin = randint(0, 1)
         if coin == 0:
             print(self.strings["_TOSS_RESULT_STR"].format(self.player.player_name))
@@ -89,15 +116,10 @@ class Game:
             print(self.strings["_TOSS_RESULT_STR"].format(self.computer.player_name))
             self.current_player = self.computer.player_name
 
-    def playRounds(self):
+    def play_rounds(self):
         while not self.quit:
-            print(self.board)
-            if self.current_player == self.player.player_name:
-                self.playerTurn() 
-            else:
-                self.computerTurn()
             if self.player.winner or self.computer.winner:
-                if self.current_player == self.computer.name:
+                if self.current_player == self.player.name:
                     self.player.losses += 1
                 self.quit = True
                 break
@@ -106,26 +128,30 @@ class Game:
                 print(self.strings["_DRAW_STR"])
                 self.quit = True
                 break
-
-    def playerTurn(self):
+            if self.current_player == self.player.player_name:
+                self.player_turn() 
+            else:
+                self.computer_turn()
+            
+    def player_turn(self):
+        len(self.player.moves)
+        print(self.board)
         move = input(self.strings["_ENTER_MOVE_STR"].format(self.player.name, _MOVE_STRINGS[len(self.player.moves)]))
         if move == self.strings["_QUIT_STR"]:
                 self.quit = True
                 return
         move = move.split(',')
         move = [int(move[0]), int(move[1])]
-        while not self.board.makeMove(self.player, move) == None:
+        while not self.board.make_move(self.player, move) == None:
             move = input(self.strings["_ENTER_MOVE_STR"].format(self.player.name, _MOVE_STRINGS[len(self.player.moves)]))
             if move == self.strings["_QUIT_STR"]:
                 self.quit = True
                 return
             move = move.split(',')
             move = [int(move[0]), int(move[1])]
-        print(self.board)
         self.current_player = self.computer.name
 
-    def computerTurn(self):
+    def computer_turn(self):
         move = self.board.getMove()
-        self.board.makeMove(self.computer, move)
-        print(self.board)
+        self.board.make_move(self.computer, move)
         self.current_player = self.player.name
