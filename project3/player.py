@@ -42,7 +42,7 @@ class Player:
         self.load_player(player_name, player_data)
 
     def make_CPU(self):
-        self.name = self.strings["_COMPUTER_NAME"]
+        self.name = self.strings["_COMPUTER_NAME_STR"]
 
     def __str__(self):
          return self.strings["_RECORD_STR"].format(self.wins, self.losses, self.draws)

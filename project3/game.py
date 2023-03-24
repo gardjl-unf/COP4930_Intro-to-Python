@@ -117,7 +117,7 @@ class Game:
             print(self.strings["_TOSS_RESULT_STR"].format(self.player.player_name))
             self.current_player = self.player.player_name
         else:
-            print(self.strings["_TOSS_RESULT_STR"].format(self.computer.player_name))
+            print(self.strings["_TOSS_RESULT_STR"].format(self.strings("_COMPUTER_NAME_STR_STR")))
             self.current_player = self.computer.player_name
 
     def play_rounds(self):
