@@ -1,6 +1,6 @@
 from random import randint
 from json import load, dump
-from os.path import getsize
+from os.path import getsize, isfile
 from player import Player
 from board import Board
 
@@ -29,7 +29,7 @@ class Game:
 
     def load_game(self, player_name):
         print(self.strings["_LOADING_STR"])
-        if getsize(self.file) > 0:
+        if isfile(self.file) and getsize(self.file) > 0:
             with open(self.file) as file_object:
                 game_data = load(file_object)
                 if player_name not in game_data:
@@ -40,12 +40,15 @@ class Game:
                     self.current_player = self.player.name
                     print(self.player)
                     self.strings["_RETURNING_STR"].format(player_name)
-                    self.load_game_state(player_name, player_data)
+                    self.load_game_state(player_data)
                     self.loaded = True       
         else:
+            f = open(self.file, "a")
+            f.close()
             self.player.new_player(player_name)
 
-    def load_game_state(self, player_name, player_data):
+    def load_game_state(self, player_data):
+        self.load_mark(player_data[3])
         self.player.load_moves(player_data[4])
         if len(self.player.moves) > 0:
             self.board.updateBoard(self.player)
@@ -58,7 +61,7 @@ class Game:
             self.get_mark()
             self.coin_flip()
         else:
-            self.load_mark(player_data[3])
+            print(self.strings["_RESUME_STR"])
 
     def binary_entry(self, prompt, valid_entries):
         entry = input(prompt)
@@ -75,8 +78,9 @@ class Game:
         self.player.player_name = input(self.strings["_NAME_PROMPT_STR"])
 
     def load_mark(self, mark_data):
-        self.set_mark(mark_data)
-        print(self.strings["_CURRENT_MARK_STR"].format(self.player.name, self.player.mark))
+        if mark_data != '' and mark_data != None:
+            self.set_mark(mark_data)
+            print(self.strings["_CURRENT_MARK_STR"].format(self.player.name, self.player.mark))
 
     def set_mark(self, mark):
         self.player.mark = mark
@@ -125,6 +129,7 @@ class Game:
                 break
             elif self.board.moves == 9:
                 self.player.draws += 1
+                print(self.board)
                 print(self.strings["_DRAW_STR"])
                 self.quit = True
                 break

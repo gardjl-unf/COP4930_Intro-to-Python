@@ -10,6 +10,7 @@ class Board:
 
     def reset(self):
         self.board = [[' ', ' ', ' '], [' ', ' ', ' '], [' ', ' ', ' ']]
+        self.moves = 0
     
     def is_valid_move(self, move):
         if move[0] < 3 and move[1] < 3:
