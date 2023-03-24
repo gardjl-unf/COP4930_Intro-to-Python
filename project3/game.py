@@ -48,7 +48,8 @@ class Game:
             self.player.new_player(player_name)
 
     def load_game_state(self, player_data):
-        self.load_mark(player_data[3])
+        if len(self.player.moves) + len(self.computer.moves) > 0:
+            self.load_mark(player_data[3])
         self.player.load_moves(player_data[4])
         if len(self.player.moves) > 0:
             self.board.updateBoard(self.player)
@@ -117,7 +118,7 @@ class Game:
             print(self.strings["_TOSS_RESULT_STR"].format(self.player.player_name))
             self.current_player = self.player.player_name
         else:
-            print(self.strings["_TOSS_RESULT_STR"].format(self.strings("_COMPUTER_NAME_STR_STR")))
+            print(self.strings["_TOSS_RESULT_STR"].format(self.strings["_COMPUTER_NAME_STR"]))
             self.current_player = self.computer.player_name
 
     def play_rounds(self):
