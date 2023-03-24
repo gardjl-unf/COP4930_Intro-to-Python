@@ -30,7 +30,6 @@
     "_ROW_STR" : "Row",
     "_QUIT_STR" : "q",
     "_MOVES_LIST_STR" : "{}, ",
-    "_NOTEBOOK_FILE_PATH":"/content/drive/MyDrive/Colab Notebooks/CIS4930/Projects/Project3/",
     "_FILE_PATH" : "",
     "_FILE_NAME" : "game_log.json"
 }
